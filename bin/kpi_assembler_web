@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+ENV["RACK_ENV"] ||= "development"
+
+require "rackup"
+require "puma"
+
+host = ENV.fetch("HOST", "127.0.0.1")
+port = Integer(ENV.fetch("PORT", "9292"))
+config = File.expand_path("../config.ru", __dir__)
+
+puts "KPIAssembler UI: http://#{host}:#{port}"
+Rackup::Server.start(
+  app: Rack::Builder.parse_file(config),
+  Host: host,
+  Port: port,
+  server: "puma"
+)

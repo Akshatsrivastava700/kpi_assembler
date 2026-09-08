@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Discover and certify trusted KPIs from an application database.">
+    <meta name="kpi-api-base" content="/api/v1">
+    <title>KPIAssembler — Certified analytics</title>
+    <link rel="stylesheet" href="/app.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="KPIAssembler home">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span>KPI<span>Assembler</span></span>
+        </a>
+
+        <nav aria-label="Workflow">
+          <p class="nav-label">Workflow</p>
+          <button class="nav-item active" data-view="workspace">
+            <span class="nav-number">1</span>
+            <span><strong>Discover</strong><small>Inspect your data model</small></span>
+          </button>
+          <button class="nav-item" data-view="workspace">
+            <span class="nav-number">2</span>
+            <span><strong>Propose</strong><small>Review candidate KPIs</small></span>
+          </button>
+          <button class="nav-item" data-view="workspace">
+            <span class="nav-number">3</span>
+            <span><strong>Certify</strong><small>Run deterministic checks</small></span>
+          </button>
+          <button class="nav-item" data-view="dashboard">
+            <span class="nav-number">4</span>
+            <span><strong>Publish</strong><small>Use the trusted pack</small></span>
+          </button>
+          <p class="nav-label secondary">Product</p>
+          <button class="nav-item simple" data-view="integration">
+            <span class="nav-icon">&lt;/&gt;</span>
+            <span><strong>Integrate</strong><small>API and embed options</small></span>
+          </button>
+        </nav>
+
+        <div class="trust-note">
+          <span class="shield">✓</span>
+          <div><strong>Trust boundary</strong><small>The model proposes.<br>Code certifies.</small></div>
+        </div>
+      </aside>
+
+      <div class="page">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">KPI discovery workspace</p>
+            <h1 id="page-title">Metric discovery</h1>
+          </div>
+          <div class="top-actions">
+            <span id="api-status" class="api-status"><i></i> Checking service</span>
+            <button class="button ghost" id="integration-shortcut">Integration guide</button>
+          </div>
+        </header>
+
+        <main>
+          <section id="workspace-view" class="view active">
+            <div class="hero">
+              <div>
+                <span class="kicker">AI-first metric governance</span>
+                <h2>Turn application data into<br><em>metrics you can trust.</em></h2>
+                <p>Point KPIAssembler at an application database. It reads the schema, proposes KPI definitions, and certifies the SQL before a number is trusted.</p>
+                <div class="hero-actions">
+                  <button class="button primary" id="discover-button">
+                    <span class="button-icon">⌁</span>
+                    Discover metrics
+                  </button>
+                  <span class="privacy"><span>●</span> Runs locally · Your data stays yours</span>
+                </div>
+              </div>
+              <div class="pipeline-visual" aria-label="Discovery pipeline diagram">
+                <div class="pipeline-node database">
+                  <span class="node-icon">▤</span>
+                  <strong>Any app DB</strong>
+                  <small>SQLite or Postgres</small>
+                </div>
+                <div class="pipeline-line"><span></span></div>
+                <div class="pipeline-node model">
+                  <span class="node-icon">✦</span>
+                  <strong>Metric proposer</strong>
+                  <small>Local LLM / heuristics</small>
+                </div>
+                <div class="pipeline-line"><span></span></div>
+                <div class="pipeline-node certified">
+                  <span class="node-icon">✓</span>
+                  <strong>Certified pack</strong>
+                  <small>Deterministic checks</small>
+                </div>
+              </div>
+            </div>
+
+            <div id="discovery-results" class="results hidden">
+              <div class="section-heading">
+                <div>
+                  <span class="step-tag">01 · DISCOVERED</span>
+                  <h2>Your application data model</h2>
+                  <p id="source-label">Connected source</p>
+                </div>
+                <button class="button ghost compact" id="rediscover-button">Scan again</button>
+              </div>
+
+              <div id="discovery-notice" class="discovery-notice hidden" role="status"></div>
+
+              <div id="schema-summary" class="schema-grid" aria-live="polite"></div>
+
+              <div class="section-heading candidates-heading">
+                <div>
+                  <span class="step-tag violet">02 · PROPOSED</span>
+                  <h2>Select metrics to certify</h2>
+                  <p id="proposal-subtitle">The proposal can be edited or rejected. It is not trusted yet.</p>
+                </div>
+                <div class="selection-count"><strong id="selected-count">0</strong> selected</div>
+              </div>
+
+              <div id="candidate-list" class="candidate-list"></div>
+
+              <div class="certify-bar">
+                <div>
+                  <span class="shield large">✓</span>
+                  <div><strong>Ready for deterministic certification</strong><small>Schema, join, null-safety, grain, and execution checks</small></div>
+                </div>
+                <button class="button primary" id="certify-button">Certify selected metrics <span>→</span></button>
+              </div>
+            </div>
+          </section>
+
+          <section id="dashboard-view" class="view">
+            <div class="dashboard-heading">
+              <div>
+                <span class="step-tag green">04 · PUBLISHED</span>
+                <h2>Certified KPI pack</h2>
+                <p>Only metrics that passed deterministic checks are shown as trusted values.</p>
+              </div>
+              <button class="button ghost compact" id="back-to-catalog">← Edit catalog</button>
+            </div>
+
+            <div id="empty-dashboard" class="empty-state">
+              <span>◇</span>
+              <h3>No certified pack yet</h3>
+              <p>Discover your schema and certify at least one proposed metric.</p>
+              <button class="button primary" id="empty-discover">Start discovery</button>
+            </div>
+
+            <div id="pack-content" class="hidden">
+              <article class="briefing-card">
+                <div class="briefing-icon">✦</div>
+                <div>
+                  <span>OPERATING BRIEFING · LAST 30 DAYS</span>
+                  <p id="briefing-headline"></p>
+                  <small id="briefing-drill"></small>
+                </div>
+              </article>
+
+              <div class="role-tabs" id="role-tabs"></div>
+              <div id="metric-grid" class="metric-grid"></div>
+
+              <div class="catalog-heading">
+                <div>
+                  <h3>Certification report</h3>
+                  <p>Every accepted proposal has an explicit outcome and audit trail.</p>
+                </div>
+                <button class="button ghost compact" id="download-pack">Download JSON</button>
+              </div>
+              <div id="certification-report" class="certification-report"></div>
+            </div>
+          </section>
+
+          <section id="integration-view" class="view">
+            <div class="integration-hero">
+              <span class="step-tag violet">FRAMEWORK AGNOSTIC</span>
+              <h2>Bring trusted metrics into<br>any application.</h2>
+              <p>KPIAssembler runs as a sidecar service. Your product can consume its versioned REST API or embed the complete workflow with one web component.</p>
+            </div>
+
+            <div class="integration-grid">
+              <article class="integration-card featured">
+                <span class="integration-type">01 · WEB COMPONENT</span>
+                <h3>Embed the complete UI</h3>
+                <p>Works in Rails, React, Angular, Vue, plain HTML, or any application that renders a webpage.</p>
+                <div class="code-block">
+                  <button class="copy-button" data-copy="embed-code">Copy</button>
+                  <pre id="embed-code"><code>&lt;script src="http://localhost:9292/kpi-assembler.js"&gt;&lt;/script&gt;
+&lt;kpi-assembler
+  service-url="http://localhost:9292"
+  height="820px"&gt;
+&lt;/kpi-assembler&gt;</code></pre>
+                </div>
+              </article>
+
+              <article class="integration-card">
+                <span class="integration-type">02 · REST API</span>
+                <h3>Build your own experience</h3>
+                <p>Use the certification engine from a mobile app, backend, BI surface, or existing admin panel.</p>
+                <div class="code-block">
+                  <button class="copy-button" data-copy="api-code">Copy</button>
+                  <pre id="api-code"><code>POST /api/v1/discover
+
+POST /api/v1/certify
+{
+  "accepted_ids": [
+    "lead_conversion_rate",
+    "paid_mrr"
+  ]
+}
+
+GET /api/v1/pack</code></pre>
+                </div>
+              </article>
+            </div>
+
+            <div class="integration-steps">
+              <h3>Application setup</h3>
+              <ol>
+                <li><span>1</span><div><strong>Run the service</strong><code>bundle exec ruby bin/kpi_assembler_web</code></div></li>
+                <li><span>2</span><div><strong>Connect an application database</strong><code>KPI_DATABASE_URL=postgres://user:pass@host:5432/application</code></div></li>
+                <li><span>3</span><div><strong>Limit tables / tenant</strong><code>KPI_INCLUDE_TABLES=orders,customers,accounts KPI_TENANT_ID=123</code></div></li>
+                <li><span>4</span><div><strong>Restrict browser access in production</strong><code>KPI_ALLOWED_ORIGIN=https://your-app.example</code></div></li>
+              </ol>
+              <aside>
+                <span>Important</span>
+                <p>Use a read-only database user or replica in production. KPIAssembler executes candidate queries during certification.</p>
+              </aside>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/kpi_assembler"
+
+options = {
+  sample_db: true,
+  use_ollama: false,
+  demo: true,
+  output: File.expand_path("../output", __dir__)
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: ruby bin/kpi_assembler [options]"
+  opts.on("--sample-db", "Use the built-in CRM funnel SQLite sample (default)") { options[:sample_db] = true }
+  opts.on("--db PATH", "Open a SQLite database") do |path|
+    options[:sample_db] = false
+    options[:db_path] = path
+  end
+  opts.on("--url URL", "Connect with a database URL (postgres:// or sqlite://)") do |url|
+    options[:sample_db] = false
+    options[:database_url] = url
+  end
+  opts.on("--tables NAMES", "Comma-separated tables to inspect") do |names|
+    options[:include_tables] = names.split(",").map(&:strip)
+  end
+  opts.on("--tenant-id ID", Integer, "Scope generated SQL to this company/location id") do |id|
+    options[:tenant_id] = id
+    options[:tenant_column] ||= "company_id"
+  end
+  opts.on("--ollama", "Propose KPIs via local Ollama (falls back to schema heuristics)") do
+    options[:use_llm] = true
+    options[:llm_provider] = :ollama
+  end
+  opts.on("--ollama-model NAME", "Ollama model name (default: llama3)") { |n| options[:ollama_model] = n }
+  opts.on("--gemini", "Propose KPIs via Google Gemini API") do
+    options[:use_llm] = true
+    options[:llm_provider] = :gemini
+  end
+  opts.on("--gemini-key KEY", "Google Gemini API key (or set GEMINI_API_KEY)") { |k| options[:gemini_api_key] = k }
+  opts.on("--gemini-model NAME", "Gemini model name (default: gemini-2.0-flash)") { |n| options[:gemini_model] = n }
+  opts.on("--accept IDS", "Comma-separated KPI ids to send through certification") do |ids|
+    options[:accept_ids] = ids.split(",").map(&:strip)
+    options[:demo] = false
+  end
+  opts.on("--accept-all", "Skip the human gate; certify every proposal") { options[:accept_all] = true }
+  opts.on("--output DIR", "Directory for kpi_pack.json and kpi_pack.html") { |d| options[:output] = d }
+end
+parser.parse!
+
+puts "======================================================="
+puts "  KPIAssembler — Autonomous Certified Analytics Pack  "
+puts "======================================================="
+
+db =
+  if options[:database_url]
+    puts "Connecting to #{options[:database_url].sub(/:[^:@]+@/, ":***@")}..."
+    KPIAssembler::Connection.from_url(options[:database_url])
+  elsif options[:db_path]
+    puts "Opening SQLite #{options[:db_path]}..."
+    KPIAssembler::Connection.open(sqlite_path: options[:db_path])
+  else
+    puts "Loading sample CRM database..."
+    KPIAssembler::Connection.wrap(KPIAssembler::SampleDatabase.build)
+  end
+
+pipeline = KPIAssembler::Pipeline.new(db_connection: db, options: options)
+pack = pipeline.run
+json_path, html_path = pipeline.write_outputs!(pack, options[:output])
+
+puts
+puts "Wrote #{json_path}"
+puts "Wrote #{html_path}"
+puts
+puts "Certified: #{pack[:kpis].map { |k| k[:id] }.join(", ")}"
+puts "Draft:     #{pack[:drafts].map { |k| k[:id] }.join(", ")}"
