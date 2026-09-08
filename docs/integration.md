@@ -1,7 +1,9 @@
 # Standalone integration
 
-KPIAssembler can run as a Rack service and expose its workspace and JSON API to
-applications written in any language.
+For the Rails engine, start with the [setup guide](setup.md).
+
+KPIAssembler can also run as a Rack service and expose its workspace and JSON
+API to applications written in any language.
 
 ## Start the service
 

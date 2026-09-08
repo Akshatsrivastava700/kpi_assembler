@@ -42,6 +42,6 @@ KPIAssembler.configure do |config|
   config.gemini_model = ENV.fetch("KPI_GEMINI_MODEL", "gemini-2.0-flash")
 
   # Ollama configuration
-  config.ollama_model = ENV.fetch("KPI_OLLAMA_MODEL", "llama3")
+  config.ollama_model = ENV.fetch("KPI_OLLAMA_MODEL", "llama3.2:3b")
   config.ollama_url = ENV.fetch("KPI_OLLAMA_URL", "http://localhost:11434/api/generate")
 end

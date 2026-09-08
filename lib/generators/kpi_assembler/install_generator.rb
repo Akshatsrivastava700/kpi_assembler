@@ -19,6 +19,8 @@ module KPIAssembler
       def print_mount_instruction
         say "\nMount KPIAssembler in config/routes.rb:", :green
         say '  mount KPIAssembler::Engine => "/kpi-assembler"'
+        say "\nThen set GEMINI_API_KEY (or KPI_LLM_PROVIDER=ollama) and restart."
+        say "Setup guide: https://github.com/Akshatsrivastava700/kpi_assembler/blob/main/docs/setup.md"
       end
     end
   end

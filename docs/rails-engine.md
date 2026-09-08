@@ -1,79 +1,24 @@
-# Rails Engine integration
+# Rails Engine notes
 
-KPIAssembler is a mountable Rails Engine. It uses the host application's
-session, authorization, and Active Record connection pool.
+Use this after the [setup guide](setup.md). KPIAssembler mounts inside a Rails 7
+app, reuses the host session, and reads through Active Record.
 
-## Install
-
-```ruby
-gem "kpi_assembler"
-```
+## Generator
 
 ```bash
 bundle install
 bin/rails generate kpi_assembler:install
 ```
 
-The generator creates `config/initializers/kpi_assembler.rb`.
+Creates `config/initializers/kpi_assembler.rb`. The template uses
+`current_company` / `company_id` as placeholders — change them to match your
+app (`current_account`, `tenant_id`, and so on).
 
-## Configure
-
-```ruby
-KPIAssembler.configure do |config|
-  config.connection_provider = lambda do |_controller|
-    ApplicationRecord.connected_to(role: :reading) do
-      ApplicationRecord.connection_pool
-    end
-  end
-
-  config.parent_controller = "ApplicationController"
-  config.tenant_column = "account_id"
-  config.tenant_id_resolver = lambda do |controller|
-    controller.send(:current_account).id
-  end
-
-  config.include_tables = []
-  config.max_tables = 30
-  config.schema_name = "public"
-
-  config.authorize_with = lambda do |controller|
-    controller.send(:authenticate_user!)
-    controller.send(:current_account).present?
-  end
-
-  config.llm_provider = ENV.fetch("KPI_LLM_PROVIDER", "gemini").to_sym
-  config.use_llm = ENV["KPI_USE_LLM"] != "false"
-
-  config.gemini_api_key = ENV["GEMINI_API_KEY"]
-  config.gemini_model = ENV.fetch("KPI_GEMINI_MODEL", "gemini-2.0-flash")
-
-  config.ollama_model = ENV.fetch("KPI_OLLAMA_MODEL", "llama3.2:3b")
-  config.ollama_url = ENV.fetch(
-    "KPI_OLLAMA_URL",
-    "http://localhost:11434/api/generate"
-  )
-end
-```
-
-Store secrets in the host application's environment rather than the initializer:
-
-```bash
-KPI_LLM_PROVIDER=gemini
-GEMINI_API_KEY=your-key
-KPI_GEMINI_MODEL=gemini-2.0-flash
-```
-
-Restart the Rails server after changing environment variables.
-
-## Mount
-
-Add the engine to `config/routes.rb`:
+## Routes
 
 ```ruby
 mount KPIAssembler::Engine => "/kpi-assembler"
 ```
-
-The mounted endpoints are:
 
 ```text
 GET/POST /kpi-assembler/api/v1/discover
@@ -81,12 +26,22 @@ POST     /kpi-assembler/api/v1/certify
 GET      /kpi-assembler/api/v1/pack
 ```
 
-## Production guidance
+Static UI files are served at `/kpi-assembler/assets/*` outside the host
+controller stack so JavaScript is not blocked as a cross-origin response.
 
-Point `connection_provider` at a read-only pool. Replace the example
-authorization callback with the host application's permission policy. Tenant
-scoping must correspond to real columns in the inspected tables.
+## Connection
 
-The engine currently keeps the latest pack in process memory per tenant.
-Production applications should persist versioned packs and define an
-invalidation policy.
+`connection_provider` must return a pool or connection `KPIAssembler::Connection`
+can wrap: `ActiveRecord::Base.connection_pool`, another pool, or a wrapped
+adapter. Prefer `connected_to(role: :reading)` when the host has a replica.
+
+## Tenancy
+
+If `tenant_column` is set and that column exists on a fact table, every
+certified query on that table must include `column = tenant_id`. Gemini often
+omits this; certification then marks the KPI draft.
+
+## Packs
+
+The engine stores the latest pack in memory per tenant. Restarting the process
+clears it. Persist packs in the host app before production use.

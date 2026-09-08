@@ -1,82 +1,56 @@
 # KPIAssembler
 
-KPIAssembler discovers application schemas, proposes useful business metrics,
-and deterministically certifies generated SQL before publishing a KPI pack.
+KPIAssembler discovers application schemas, proposes business metrics, and
+certifies generated SQL before a number is trusted.
 
-The LLM proposes; deterministic code certifies. Candidate queries are checked
-against the real schema, tenant boundary, SQL safety rules, query planner, and
-sample execution before they can be marked certified.
+The LLM proposes. Deterministic code certifies.
 
-## Features
-
-- Mountable Rails Engine with an interactive workspace and JSON API
-- Standalone Rack application and command-line interface
-- SQLite and PostgreSQL schema introspection
-- Gemini and Ollama KPI proposal providers
-- Schema-driven heuristic fallback when no model is available
-- Deterministic SQL, join, division, tenant, and execution checks
-- JSON and HTML KPI packs
-
-## Install
-
-Add the gem to your application:
+## Install (Rails)
 
 ```ruby
-gem "kpi_assembler"
+# Gemfile
+gem "kpi_assembler", "~> 0.5"
 ```
-
-Then run:
 
 ```bash
 bundle install
 bin/rails generate kpi_assembler:install
 ```
 
-Mount the engine:
-
 ```ruby
+# config/routes.rb
 mount KPIAssembler::Engine => "/kpi-assembler"
 ```
 
-See [Rails Engine integration](docs/rails-engine.md) for configuration and
-[standalone integration](docs/integration.md) for Rack, CLI, and API usage.
+Then:
 
-## LLM configuration
+1. Edit `config/initializers/kpi_assembler.rb` (database pool, tenant, auth).
+2. Set `GEMINI_API_KEY` and `KPI_LLM_PROVIDER=gemini` in the host `.env`,
+   or use Ollama / `KPI_USE_LLM=false`.
+3. Restart the app and open `/kpi-assembler`.
 
-Gemini:
+Full walkthrough, env vars, and troubleshooting:
+**[Setup guide](docs/setup.md)**.
 
-```bash
-KPI_LLM_PROVIDER=gemini
-GEMINI_API_KEY=your-key
-KPI_GEMINI_MODEL=gemini-2.0-flash
-```
+Rails engine details: [docs/rails-engine.md](docs/rails-engine.md).
+Standalone Rack/CLI/API: [docs/integration.md](docs/integration.md).
 
-Ollama:
+## What it does
 
-```bash
-KPI_LLM_PROVIDER=ollama
-KPI_OLLAMA_MODEL=llama3.2:3b
-KPI_OLLAMA_URL=http://localhost:11434/api/generate
-```
+1. **Discover** — introspect tables, columns, and foreign keys
+2. **Propose** — Gemini, Ollama, or schema heuristics draft KPI SQL
+3. **Accept** — you choose which candidates to certify
+4. **Certify** — read-only SELECT, join safety, tenant scope, planner, sample run
+5. **Publish** — certified pack as JSON (and HTML from the CLI)
 
-Set `KPI_USE_LLM=false` to use schema-driven heuristics only.
+Rejected candidates never reach certification. **Draft** means a selected KPI
+failed a certification check.
 
-## Development
+## Requirements
 
-```bash
-bundle install
-bundle exec rspec
-bundle exec ruby bin/kpi_assembler --sample-db
-bundle exec ruby bin/kpi_assembler_web
-```
-
-The standalone workspace starts at `http://127.0.0.1:9292`.
-
-## Security
-
-Use a read-only database user or replica. Generated candidate SQL is executed
-during deterministic certification. Configure tenant scoping and authorization
-before exposing the engine or API.
+- Ruby >= 3.0
+- Rails 7 for the engine
+- Read-only database access (replica or reporting user)
 
 ## License
 

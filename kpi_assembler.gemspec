@@ -12,7 +12,8 @@ Gem::Specification.new do |spec|
   spec.metadata = {
     "homepage_uri" => spec.homepage,
     "source_code_uri" => spec.homepage,
-    "changelog_uri" => "#{spec.homepage}/releases"
+    "changelog_uri" => "#{spec.homepage}/releases",
+    "documentation_uri" => "#{spec.homepage}/blob/main/docs/setup.md"
   }
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0"
