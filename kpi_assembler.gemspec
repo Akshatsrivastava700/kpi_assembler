@@ -8,6 +8,12 @@ Gem::Specification.new do |spec|
   spec.authors = ["KPIAssembler contributors"]
   spec.summary = "Schema-driven KPI proposal and deterministic certification"
   spec.description = "A mountable Rails engine and Ruby library that proposes KPIs from application schemas and certifies their SQL before publication."
+  spec.homepage = "https://github.com/Akshatsrivastava700/kpi_assembler"
+  spec.metadata = {
+    "homepage_uri" => spec.homepage,
+    "source_code_uri" => spec.homepage,
+    "changelog_uri" => "#{spec.homepage}/releases"
+  }
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0"
 
