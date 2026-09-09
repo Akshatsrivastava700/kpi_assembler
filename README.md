@@ -1,5 +1,8 @@
 # KPIAssembler
 
+<img width="1920" height="903" alt="Screenshot from 2026-09-09 15-51-19" src="https://github.com/user-attachments/assets/a11d4833-8bf1-4315-b6cb-9203cf65cea4" />
+
+
 KPIAssembler discovers application schemas, proposes business metrics, and
 certifies generated SQL before a number is trusted.
 
