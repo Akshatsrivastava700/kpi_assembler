@@ -8,6 +8,9 @@ certifies generated SQL before a number is trusted.
 
 The LLM proposes. Deterministic code certifies.
 
+A separate Python implementation lives at
+[kpi-assembler-python](https://github.com/Akshatsrivastava700/kpi-assembler-python).
+
 ## Install (Rails)
 
 ```ruby
